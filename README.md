@@ -66,7 +66,7 @@ A beautiful, feature-rich real-time stock market dashboard built with Flask and 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/stock-market-dashboard.git
+   git clone https://github.com/chaushmohammad124-ctrl/Stock-Price.git
    cd stock-market-dashboard
    ```
 
@@ -201,9 +201,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📧 Contact
 
-Your Name - [@chaushmohammasd](https://twitter.com/chaushmohammad)
+Your Name - [@chaushmohammad](https://twitter.com/chaushmohammad)
 
-Project Link: [https://github.com/chaushmohammad124-ctrl/stock-market-dashboard](https://github.com/ychaushmohammad124-ctrl/stock-market-dashboard)
 
 ## ⚠️ Disclaimer
 
@@ -212,3 +211,4 @@ This dashboard is for educational and informational purposes only. It should not
 ---
 
 **Made with ❤️ and Python**
+
