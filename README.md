@@ -31,9 +31,6 @@ A beautiful, feature-rich real-time stock market dashboard built with Flask and 
 - **Smooth Animations**: Engaging micro-interactions and transitions
 - **Color-coded Charts**: Green for gains, red for losses
 
-## 🚀 Demo
-
-![Stock Dashboard Screenshot](https://raw.githubusercontent.com/yourusername/stock-market-dashboard/main/screenshots/dashboard_main.png)
 
 *Beautiful glassmorphic design with real company logos, real-time data, and interactive charts*
 
@@ -211,4 +208,5 @@ This dashboard is for educational and informational purposes only. It should not
 ---
 
 **Made with ❤️ and Python**
+
 
