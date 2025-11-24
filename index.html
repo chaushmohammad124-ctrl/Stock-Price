@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market Dashboard - Real-time Stock Tracker</title>
+    <meta name="description" content="Professional stock market dashboard with real-time data, company logos, watchlist, news feed, and technical indicators">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(74, 222, 128, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 90%, rgba(96, 165, 250, 0.2) 0%, transparent 50%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background particles */
+        .particle {
+            position: fixed;
+            width: 3px;
+            height: 3px;
+            background: rgba(120, 119, 198, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 15s infinite;
+            box-shadow: 0 0 10px rgba(120, 119, 198, 0.8);
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0) translateX(0); 
+                opacity: 0.3;
+            }
+            25% { 
+                transform: translateY(-100px) translateX(50px); 
+                opacity: 0.6;
+            }
+            50% { 
+                transform: translateY(-200px) translateX(-50px); 
+                opacity: 1;
+            }
+            75% { 
+                transform: translateY(-100px) translateX(100px); 
+                opacity: 0.6;
+            }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        .main-content {
+            min-width: 0;
+        }
+
+        /* Glassmorphism header with dark theme */
+        .header {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(120, 119, 198, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(120, 119, 198, 0.8),
+                         0 0 40px rgba(120, 119, 198, 0.5),
+                         2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 20px rgba(120, 119, 198, 0.8),
+                             0 0 40px rgba(120, 119, 198, 0.5),
+                             2px 2px 4px rgba(0, 0, 0, 0.5);
+            }
+            to {
+                text-shadow: 0 0 30px rgba(120, 119, 198, 1),
+                             0 0 60px rgba(120, 119, 198, 0.7),
+                             2px 2px 4px rgba(0, 0, 0, 0.5);
+            }
+        }
+
+        .search-container {
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 18px 25px;
+            font-size: 1.1em;
+            border: 2px solid rgba(120, 119, 198, 0.3);
+            border-radius: 50px;
+            background: rgba(15, 23, 42, 0.9);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: rgba(120, 119, 198, 0.8);
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(120, 119, 198, 0.5),
+                        0 6px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .search-box::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 10px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
+                        0 0 20px rgba(120, 119, 198, 0.3);
+            border: 1px solid rgba(120, 119, 198, 0.3);
+            display: none;
+            z-index: 100;
+        }
+
+        .search-results::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .search-results::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .search-results::-webkit-scrollbar-thumb {
+            background: rgba(120, 119, 198, 0.5);
+            border-radius: 10px;
+        }
+
+        .search-result-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .search-result-item:hover {
+            background: rgba(120, 119, 198, 0.2);
+            transform: translateX(5px);
+            box-shadow: inset 4px 0 0 rgba(120, 119, 198, 1);
+        }
+
+        .search-result-item strong {
+            color: #7877c6;
+            text-shadow: 0 0 10px rgba(120, 119, 198, 0.5);
+        }
+
+        .quick-picks {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .quick-pick {
+            padding: 12px 24px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(120, 119, 198, 0.4);
+            border-radius: 25px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .quick-pick:hover {
+            background: rgba(120, 119, 198, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(120, 119, 198, 0.5),
+                        0 0 30px rgba(120, 119, 198, 0.3);
+            border-color: rgba(120, 119, 198, 0.8);
+        }
+
+        /* Company Logo */
+        .company-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px;
+            object-fit: contain;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+        }
+
+        .logo-fallback {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #7877c6, #4ade80);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Stock info cards */
+        .stock-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(120, 119, 198, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(120, 119, 198, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .info-card:hover::before {
+            opacity: 1;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7),
+                        0 0 30px rgba(120, 119, 198, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border-color: rgba(120, 119, 198, 0.6);
+        }
+
+        .info-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+        }
+
+        .info-value {
+            color: #fff;
+            font-size: 1.8em;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5),
+                         0 0 30px rgba(120, 119, 198, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .price-change {
+            margin-top: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .positive { 
+            color: #4ade80; 
+            text-shadow: 0 0 15px rgba(74, 222, 128, 0.8),
+                         0 0 30px rgba(74, 222, 128, 0.4);
+        }
+        
+        .negative { 
+            color: #f87171; 
+            text-shadow: 0 0 15px rgba(248, 113, 113, 0.8),
+                         0 0 30px rgba(248, 113, 113, 0.4);
+        }
+
+        /* Chart container */
+        .chart-container {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(120, 119, 198, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            margin-bottom: 30px;
+            animation: fadeIn 0.8s ease-out 0.4s both;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .time-btn {
+            padding: 10px 20px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(120, 119, 198, 0.4);
+            border-radius: 15px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .time-btn:hover {
+            background: rgba(120, 119, 198, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(120, 119, 198, 0.5);
+            border-color: rgba(120, 119, 198, 0.8);
+        }
+
+        .time-btn.active {
+            background: rgba(120, 119, 198, 0.5);
+            box-shadow: 0 4px 15px rgba(120, 119, 198, 0.4),
+                        0 0 30px rgba(120, 119, 198, 0.3);
+            border-color: rgba(120, 119, 198, 1);
+        }
+
+        .loading {
+            text-align: center;
+            color: #fff;
+            font-size: 1.2em;
+            padding: 40px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .spinner {
+            border: 4px solid rgba(120, 119, 198, 0.3);
+            border-top: 4px solid #7877c6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 20px rgba(120, 119, 198, 0.5);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #stockChart {
+            max-height: 400px;
+        }
+
+        /* Glowing stock name */
+        .stock-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stock-name {
+            color: #7877c6;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(120, 119, 198, 1),
+                         0 0 40px rgba(120, 119, 198, 0.6);
+            flex: 1;
+        }
+
+        .watchlist-btn {
+            padding: 10px 20px;
+            background: rgba(74, 222, 128, 0.2);
+            border: 1px solid rgba(74, 222, 128, 0.5);
+            border-radius: 12px;
+            color: #4ade80;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .watchlist-btn:hover {
+            background: rgba(74, 222, 128, 0.3);
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+        }
+
+        .watchlist-btn.in-watchlist {
+            background: rgba(248, 113, 113, 0.2);
+            border-color: rgba(248, 113, 113, 0.5);
+            color: #f87171;
+        }
+
+        .watchlist-btn.in-watchlist:hover {
+            background: rgba(248, 113, 113, 0.3);
+            box-shadow: 0 0 20px rgba(248, 113, 113, 0.5);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .sidebar-section {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(120, 119, 198, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-title {
+            color: #fff;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .watchlist-item {
+            padding: 12px;
+            background: rgba(120, 119, 198, 0.1);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(120, 119, 198, 0.2);
+        }
+
+        .watchlist-item:hover {
+            background: rgba(120, 119, 198, 0.2);
+            transform: translateX(5px);
+        }
+
+        .watchlist-symbol {
+            color: #7877c6;
+            font-weight: bold;
+        }
+
+        .watchlist-remove {
+            color: #f87171;
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: all 0.2s ease;
+        }
+
+        .watchlist-remove:hover {
+            transform: scale(1.2);
+        }
+
+        .empty-watchlist {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        /* News Section */
+        .news-section {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(120, 119, 198, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .news-title {
+            color: #fff;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .news-item {
+            background: rgba(120, 119, 198, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(120, 119, 198, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .news-item:hover {
+            background: rgba(120, 119, 198, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .news-item-title {
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+
+        .news-item-meta {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85em;
+        }
+
+        /* Technical Indicators */
+        .indicators-section {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(120, 119, 198, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .indicator-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .indicator-item:last-child {
+            border-bottom: none;
+        }
+
+        .indicator-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .indicator-value {
+            color: #7877c6;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(120, 119, 198, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+            
+            .stock-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background particles -->
+    <script>
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 15 + 's';
+            particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+            document.body.appendChild(particle);
+        }
+    </script>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="header">
+                <h1>📈 Stock Market Dashboard</h1>
+                <div class="search-container">
+                    <input type="text" class="search-box" id="searchBox" placeholder="Search any stock (type symbol or company name)...">
+                    <div class="search-results" id="searchResults"></div>
+                </div>
+                <div class="quick-picks">
+                    <div class="quick-pick" onclick="loadStock('AAPL')">🍎 AAPL</div>
+                    <div class="quick-pick" onclick="loadStock('MSFT')">💻 MSFT</div>
+                    <div class="quick-pick" onclick="loadStock('GOOGL')">🔍 GOOGL</div>
+                    <div class="quick-pick" onclick="loadStock('TSLA')">⚡ TSLA</div>
+                    <div class="quick-pick" onclick="loadStock('AMZN')">📦 AMZN</div>
+                    <div class="quick-pick" onclick="loadStock('NVDA')">🎮 NVDA</div>
+                    <div class="quick-pick" onclick="loadStock('META')">📱 META</div>
+                </div>
+            </div>
+
+            <div id="loadingState" class="loading hidden">
+                <div class="spinner"></div>
+                Loading stock data...
+            </div>
+
+            <div id="stockData" class="hidden">
+                <div class="chart-container">
+                    <div class="stock-header">
+                        <img id="companyLogo" class="company-logo hidden" alt="Company Logo">
+                        <div id="logoFallback" class="logo-fallback hidden"></div>
+                        <div class="stock-name" id="stockName"></div>
+                        <button class="watchlist-btn" id="watchlistBtn" onclick="toggleWatchlist()">
+                            <i class="fas fa-star"></i>
+                            <span id="watchlistBtnText">Add to Watchlist</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="stock-info">
+                    <div class="info-card">
+                        <div class="info-label">Current Price</div>
+                        <div class="info-value" id="currentPrice">-</div>
+                        <div class="price-change" id="priceChange">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Day Range</div>
+                        <div class="info-value" style="font-size: 1.3em;">
+                            <span id="dayLow">-</span> - <span id="dayHigh">-</span>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Volume</div>
+                        <div class="info-value" id="volume">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Market Cap</div>
+                        <div class="info-value" id="marketCap">-</div>
+                    </div>
+                </div>
+
+                <!-- Technical Indicators -->
+                <div class="indicators-section">
+                    <div class="sidebar-title"><i class="fas fa-chart-line"></i> Technical Indicators</div>
+                    <div class="indicator-item">
+                        <span class="indicator-label">RSI (14)</span>
+                        <span class="indicator-value" id="rsiValue">-</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-label">MACD</span>
+                        <span class="indicator-value" id="macdValue">-</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-label">20-Day MA</span>
+                        <span class="indicator-value" id="ma20Value">-</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-label">50-Day MA</span>
+                        <span class="indicator-value" id="ma50Value">-</span>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-controls">
+                        <button class="time-btn active" onclick="changeTimeframe('1d')">1D</button>
+                        <button class="time-btn" onclick="changeTimeframe('1w')">1W</button>
+                        <button class="time-btn" onclick="changeTimeframe('1m')">1M</button>
+                        <button class="time-btn" onclick="changeTimeframe('3m')">3M</button>
+                        <button class="time-btn" onclick="changeTimeframe('1y')">1Y</button>
+                    </div>
+                    <canvas id="stockChart"></canvas>
+                </div>
+
+                <!-- News Section -->
+                <div class="news-section" id="newsSection">
+                    <div class="news-title"><i class="fas fa-newspaper"></i> Latest News</div>
+                    <div id="newsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title"><i class="fas fa-star"></i> My Watchlist</div>
+                <div id="watchlistContainer">
+                    <div class="empty-watchlist">No stocks in watchlist</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chart;
+        let currentStockData;
+        let currentTimeframe = '1d';
+        let currentSymbol = '';
+        let watchlist = JSON.parse(localStorage.getItem('stockWatchlist') || '[]');
+
+        // Initialize watchlist display
+        updateWatchlistDisplay();
+
+        // Search functionality
+        const searchBox = document.getElementById('searchBox');
+        const searchResults = document.getElementById('searchResults');
+        let searchTimeout;
+
+        searchBox.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            if (query.length < 1) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/search/${query}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        let html = '';
+                        if (data.length > 0) {
+                            html += data.map(stock => 
+                                `<div class="search-result-item" onclick="loadStock('${stock.symbol}')">
+                                    <strong>${stock.symbol}</strong> - ${stock.name}
+                                </div>`
+                            ).join('');
+                        }
+                        
+                        html += `<div class="search-result-item" onclick="loadStock('${query.toUpperCase()}')">
+                            <strong>🔍 Search for: ${query.toUpperCase()}</strong>
+                        </div>`;
+                        
+                        searchResults.innerHTML = html;
+                        searchResults.style.display = 'block';
+                    });
+            }, 300);
+        });
+
+        searchBox.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const symbol = this.value.trim().toUpperCase();
+                if (symbol) {
+                    loadStock(symbol);
+                }
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        function loadStock(symbol) {
+            currentSymbol = symbol;
+            searchResults.style.display = 'none';
+            searchBox.value = symbol;
+            
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('stockData').classList.add('hidden');
+
+            fetch(`/api/stock/${symbol}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Stock not found: ' + data.error + '\n\nPlease try another symbol');
+                        document.getElementById('loadingState').classList.add('hidden');
+                        return;
+                    }
+                    currentStockData = data;
+                    displayStockData(data);
+                    updateChart(currentTimeframe);
+                    loadStockNews(symbol);
+                    loadTechnicalIndicators(symbol);
+                    updateWatchlistButton();
+                    updateCompanyLogo(symbol);
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('stockData').classList.remove('hidden');
+                })
+                .catch(err => {
+                    alert('Error loading stock: ' + err.message);
+                    document.getElementById('loadingState').classList.add('hidden');
+                });
+        }
+
+        function updateCompanyLogo(symbol) {
+            const logo = document.getElementById('companyLogo');
+            const fallback = document.getElementById('logoFallback');
+            
+            // Try Clearbit Logo API
+            const logoUrl = `https://logo.clearbit.com/${getCompanyDomain(symbol)}`;
+            
+            logo.src = logoUrl;
+            logo.onerror = function() {
+                logo.classList.add('hidden');
+                fallback.classList.remove('hidden');
+                fallback.textContent = symbol.charAt(0);
+            };
+            logo.onload = function() {
+                logo.classList.remove('hidden');
+                fallback.classList.add('hidden');
+            };
+        }
+
+        function getCompanyDomain(symbol) {
+            const domains = {
+                'AAPL': 'apple.com',
+                'MSFT': 'microsoft.com',
+                'GOOGL': 'google.com',
+                'AMZN': 'amazon.com',
+                'TSLA': 'tesla.com',
+                'META': 'meta.com',
+                'NVDA': 'nvidia.com',
+                'JPM': 'jpmorganchase.com',
+                'V': 'visa.com',
+                'MA': 'mastercard.com',
+                'WMT': 'walmart.com',
+                'DIS': 'disney.com',
+                'NFLX': 'netflix.com',
+                'INTC': 'intel.com',
+                'AMD': 'amd.com',
+                'PYPL': 'paypal.com',
+                'NKE': 'nike.com',
+                'MCD': 'mcdonalds.com',
+                'SBUX': 'starbucks.com'
+            };
+            return domains[symbol] || symbol.toLowerCase() + '.com';
+        }
+
+        function displayStockData(data) {
+            document.getElementById('stockName').textContent = `${data.symbol} - ${data.name}`;
+            document.getElementById('currentPrice').textContent = `$${data.price.toFixed(2)}`;
+            
+            const changeClass = data.change >= 0 ? 'positive' : 'negative';
+            const changeSymbol = data.change >= 0 ? '▲' : '▼';
+            document.getElementById('priceChange').innerHTML = 
+                `<span class="${changeClass}">${changeSymbol} $${Math.abs(data.change).toFixed(2)} (${data.changePercent.toFixed(2)}%)</span>`;
+            
+            document.getElementById('dayLow').textContent = `$${data.low.toFixed(2)}`;
+            document.getElementById('dayHigh').textContent = `$${data.high.toFixed(2)}`;
+            document.getElementById('volume').textContent = formatNumber(data.volume);
+            document.getElementById('marketCap').textContent = formatMarketCap(data.marketCap);
+        }
+
+        function loadStockNews(symbol) {
+            fetch(`/api/news/${symbol}`)
+                .then(res => res.json())
+                .then(news => {
+                    const newsList = document.getElementById('newsList');
+                    if (!news || news.error || news.length === 0) {
+                        newsList.innerHTML = '<div class="empty-watchlist">No recent news available</div>';
+                        return;
+                    }
+                    
+                    newsList.innerHTML = news.map(item => `
+                        <div class="news-item" onclick="window.open('${item.link}', '_blank')">
+                            <div class="news-item-title">${item.title}</div>
+                            <div class="news-item-meta">${item.publisher} • ${new Date(item.publishedAt).toLocaleDateString()}</div>
+                        </div>
+                    `).join('');
+                })
+                .catch(err => {
+                    document.getElementById('newsList').innerHTML = '<div class="empty-watchlist">Failed to load news</div>';
+                });
+        }
+
+        function loadTechnicalIndicators(symbol) {
+            fetch(`/api/indicators/${symbol}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('rsiValue').textContent = 'N/A';
+                        document.getElementById('macdValue').textContent = 'N/A';
+                        document.getElementById('ma20Value').textContent = 'N/A';
+                        document.getElementById('ma50Value').textContent = 'N/A';
+                        return;
+                    }
+                    
+                    document.getElementById('rsiValue').textContent = data.rsi.toFixed(2);
+                    document.getElementById('macdValue').textContent = data.macd.toFixed(2);
+                    document.getElementById('ma20Value').textContent = `$${data.ma_20.toFixed(2)}`;
+                    document.getElementById('ma50Value').textContent = `$${data.ma_50.toFixed(2)}`;
+                })
+                .catch(err => {
+                    console.error('Failed to load indicators:', err);
+                });
+        }
+
+        function changeTimeframe(timeframe) {
+            currentTimeframe = timeframe;
+            document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateChart(timeframe);
+        }
+
+        function updateChart(timeframe) {
+            const history = currentStockData.history[timeframe];
+            
+            if (!history || history.length === 0) {
+                return;
+            }
+
+            const labels = history.map(item => {
+                const date = new Date(item.date);
+                if (timeframe === '1d') {
+                    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                } else {
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                }
+            });
+
+            const prices = history.map(item => item.price);
+            const isPositive = prices[prices.length - 1] >= prices[0];
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            
+            if (isPositive) {
+                gradient.addColorStop(0, 'rgba(74, 222, 128, 0.4)');
+                gradient.addColorStop(1, 'rgba(74, 222, 128, 0.0)');
+            } else {
+                gradient.addColorStop(0, 'rgba(248, 113, 113, 0.4)');
+                gradient.addColorStop(1, 'rgba(248, 113, 113, 0.0)');
+            }
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: currentStockData.symbol,
+                        data: prices,
+                        borderColor: isPositive ? '#4ade80' : '#f87171',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 8,
+                        pointHoverBackgroundColor: isPositive ? '#4ade80' : '#f87171',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            borderColor: 'rgba(120, 119, 198, 0.5)',
+                            borderWidth: 1,
+                            padding: 15,
+                            cornerRadius: 10,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            titleColor: '#7877c6',
+                            bodyColor: '#fff'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(120, 119, 198, 0.1)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                maxTicksLimit: 8,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(120, 119, 198, 0.1)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                callback: function(value) {
+                                    return '$' + value.toFixed(2);
+                                },
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        // Watchlist functions
+        function toggleWatchlist() {
+            if (watchlist.includes(currentSymbol)) {
+                watchlist = watchlist.filter(s => s !== currentSymbol);
+            } else {
+                watchlist.push(currentSymbol);
+            }
+            localStorage.setItem('stockWatchlist', JSON.stringify(watchlist));
+            updateWatchlistButton();
+            updateWatchlistDisplay();
+        }
+
+        function updateWatchlistButton() {
+            const btn = document.getElementById('watchlistBtn');
+            const btnText = document.getElementById('watchlistBtnText');
+            const inWatchlist = watchlist.includes(currentSymbol);
+            
+            if (inWatchlist) {
+                btn.classList.add('in-watchlist');
+                btnText.textContent = 'Remove from Watchlist';
+            } else {
+                btn.classList.remove('in-watchlist');
+                btnText.textContent = 'Add to Watchlist';
+            }
+        }
+
+        function updateWatchlistDisplay() {
+            const container = document.getElementById('watchlistContainer');
+            
+            if (watchlist.length === 0) {
+                container.innerHTML = '<div class="empty-watchlist">No stocks in watchlist</div>';
+                return;
+            }
+            
+            container.innerHTML = watchlist.map(symbol => `
+                <div class="watchlist-item" onclick="loadStock('${symbol}')">
+                    <span class="watchlist-symbol">${symbol}</span>
+                    <span class="watchlist-remove" onclick="event.stopPropagation(); removeFromWatchlist('${symbol}')">
+                        <i class="fas fa-times"></i>
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function removeFromWatchlist(symbol) {
+            watchlist = watchlist.filter(s => s !== symbol);
+            localStorage.setItem('stockWatchlist', JSON.stringify(watchlist));
+            updateWatchlistDisplay();
+            if (symbol === currentSymbol) {
+                updateWatchlistButton();
+            }
+        }
+
+        function formatNumber(num) {
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+            if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+            return num.toString();
+        }
+
+        function formatMarketCap(num) {
+            if (num >= 1e12) return '$' + (num / 1e12).toFixed(2) + 'T';
+            if (num >= 1e9) return '$' + (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return '$' + (num / 1e6).toFixed(2) + 'M';
+            return '$' + num.toString();
+        }
+
+        // Load default stock on page load
+        window.addEventListener('load', () => {
+            loadStock('AAPL');
+        });
+    </script>
+</body>
+</html>
