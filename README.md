@@ -64,7 +64,7 @@ A beautiful, feature-rich real-time stock market dashboard built with Flask and 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/chaushmohammad124-ctrl/Stock-Price.git
-   cd stock-market-dashboard
+   cd Stock-Price dashboard
    ```
 
 2. **Create a virtual environment** (recommended)
@@ -208,5 +208,6 @@ This dashboard is for educational and informational purposes only. It should not
 ---
 
 **Made with ❤️ and Python**
+
 
 
